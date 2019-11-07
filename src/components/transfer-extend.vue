@@ -1,7 +1,10 @@
 <template>
   <div class="transfer" id="transfer" :style="{width,height}">
+
+
     <template v-if="mode == 'transfer'">
       <!-- 左侧穿梭框 原料框 -->
+
       <div class="transfer-left">
         <el-input v-if="filter" placeholder="输入关键字进行过滤" v-model="filterFrom" size="small" class="filter-tree">
         </el-input>
@@ -14,7 +17,12 @@
             <span> {{`${from_check_keys_length ? from_check_keys_length + "/" : ""}${leftTotalCount} 条`}}</span>
           </h3>
 
-          <el-tree ref='from-tree' :data="self_from_data" show-checkbox :node-key="node_key" @check='fromTreeChecked' :default-expanded-keys="from_expanded_keys" :props="defaultProps" :filter-node-method="filterNodeFrom" :default-expand-all="openAll" :render-content='renderContent' :default-checked-keys="defaultCheckedKeys">
+          <el-tree ref='from-tree' :data="self_from_data"
+                   show-checkbox :node-key="node_key" @check='fromTreeChecked'
+                   :default-expanded-keys="from_expanded_keys" :props="defaultProps"
+                   draggable
+                   :filter-node-method="filterNodeFrom" :default-expand-all="openAll"
+                   :render-content='renderContent' :default-checked-keys="defaultCheckedKeys">
           </el-tree>
         </div>
       </div>
@@ -202,10 +210,12 @@ const getTotal=(data)=>{
 
 
     let  sequenceFilter=(item)=>{
-      if(!item ||item.children.length===0){
+      if(!item ||!item.children||item.children.length===0){
         console.log("map item")
         leftTotalCount += 1;
       }
+      // leftTotalCount += 1;
+
       item.children&& item.children.map((childItem, childIndex) => {
         let nowKey = `${index}${splitSymbol}${childIndex}`;
 
@@ -224,6 +234,32 @@ const getTotal=(data)=>{
     sequenceFilter(item)
 
   });
+  return  leftTotalCount;
+}
+const getCheckTotal=(data)=>{
+  let leftTotalCount=0;
+  data && data.map((item, index) => {
+    //leftTotalCount +=1
+
+
+    let  sequenceFilter=(item)=>{
+
+      if(!item.children||item.children.length===0){
+        console.log(item)
+        console.log("checktotal")
+        console.log("map item")
+        leftTotalCount += 1;
+      }
+      // leftTotalCount += 1;
+      /*sequenceFilter(childItem)
+      item.children&& item.children.map((childItem, childIndex) => {
+        sequenceFilter(childItem)
+      })*/
+    }
+    sequenceFilter(item)
+
+  });
+
   return  leftTotalCount;
 }
 const getLeftTotal = (data, rightDataKey = {}) => {
@@ -493,18 +529,31 @@ export default {
       let newSkeletonCheckedNodes = []
       cloneSkeletonCheckedNodes.forEach(item => {
         if (!inquireIsExist(item)) {
+
           newSkeletonCheckedNodes.push(item)
+          // if(item.children && item.children.length>0){
+          //   newSkeletonCheckedNodes.push(item)
+          // }else if(this.filterNodeFrom(this.filterFrom,item)){
+          //   newSkeletonCheckedNodes.push(item)
+          // }
+
+
         }
       })
       // 筛选到目标树不存在的骨架后在处理每个骨架节点-非末端叶子节点 - 全选节点
       console.log(newSkeletonCheckedNodes)
       console.log("newSkeletonCheckedNodes")
-      newSkeletonCheckedNodes.forEach(item => {
-        if (item[children__] && item[children__].length > 0) {
-          item[children__] = []
-          this.$refs['to-tree'].append(item, item[pid__])
-        }
-      })
+      // newSkeletonCheckedNodes.forEach(item => {
+      //   if (item[children__] && item[children__].length > 0) {
+      //     item[children__] = []
+      //     this.$refs['to-tree'].append(item, item[pid__])
+      //   }
+      // })
+
+
+
+
+
       // 第三步 处理末端叶子元素 - 声明新盒子筛选出所有末端叶子节点
       let leafCheckedNodes = arrayCheckedNodes.filter(
         item => !item[children__] || item[children__].length == 0
@@ -513,8 +562,23 @@ export default {
       console.log("leafCheckedNodes")
       // 末端叶子直接插入目标树
       leafCheckedNodes.forEach(item => {
+       // this.$refs['to-tree'].append(item, item[pid__])
+      })
+
+      console.log(newSkeletonCheckedNodes)
+      console.log(leafCheckedNodes)
+
+      let NewleafCheckedNodes=[...newSkeletonCheckedNodes,...leafCheckedNodes]
+      console.log(NewleafCheckedNodes)
+      console.log("NewleafCheckedNodes")
+      newSkeletonCheckedNodes.forEach(item => {
+        if (item[children__] && item[children__].length > 0) {
+          item[children__] = []
+
+        }
         this.$refs['to-tree'].append(item, item[pid__])
       })
+
       // 递归查询data内是否存在item函数
       function inquireIsExist (item, strData = self_to_data) {
         // 将树形数据格式化成一维字符串 然后通过匹配来判断是否已存在
@@ -553,7 +617,50 @@ export default {
       } */
       // 左侧删掉选中数据
       arrayCheckedNodes.forEach(item => {
+        console.log(item)
+        console.log("arrayCheckedNodes  item")
+        // if(this.filterNodeFrom(this.filterFrom,item) || (item.children&& item.children.length>0)){
+
+          // 假如删除的pid 存在 newSkeletonCheckedNodes  并且id在 arrayCheckedNodes 但 id 不在newSkeletonCheckedNodes
         this.$refs['from-tree'].remove(item)
+          // if(this.filterFrom==="")
+          // {this.$refs['from-tree'].remove(item) }
+          //
+          // else if((item.children&& item.children.length>0)){
+          //   let bl=false,bl2=false,bitem='';
+          //   newSkeletonCheckedNodes.forEach(item2 => {
+          //     if (item2.pid===item.id) {
+          //       bl=true;
+          //       bitem=item2.id;
+          //       // this.$refs['from-tree'].remove(item)
+          //     }
+          //   })
+          //
+          //   newSkeletonCheckedNodes.forEach(item2 => {
+          //     if (item2.id===bitem) {
+          //       bl2=true;
+          //       // this.$refs['from-tree'].remove(item)
+          //     }
+          //   })
+          //   console.log(bl+"  "+bl2)
+          //   console.log("fffffffffff")
+          //   if(bl && !bl2){
+          //
+          //   }else{
+          //     this.$refs['from-tree'].remove(item)
+          //   }
+          // // }
+
+          console.log("arrayCheckedNodes  item2")
+
+        //
+        // if(item.children && item.children.length>0){
+        //   newSkeletonCheckedNodes.push(item)
+        // }else if(this.filterNodeFrom(this.filterFrom,item)){
+        //   newSkeletonCheckedNodes.push(item)
+        // }
+
+
       })
       // 处理完毕按钮恢复禁用状态
       this.from_check_keys = []
@@ -561,6 +668,8 @@ export default {
       if (this.transferOpenNode) {
         this.to_expanded_keys = keys
       }
+      this.$refs['from-tree'].filter(this.filterFrom)
+      this.$refs['from-tree'].setCheckedNodes([])
       // 传递信息给父组件
       this.$emit('addBtn', this.self_from_data, this.self_to_data, {
         keys,
@@ -569,134 +678,7 @@ export default {
         halfNodes
       })
     },
-    // 移除按钮
-    removeToSource () {
-      // 获取选中通过穿梭框的keys - 仅用于传送纯净的id数组到父组件同后台通信
-      let keys = this.$refs['to-tree'].getCheckedKeys(this.leafOnly)
-      // 获取半选通过穿梭框的keys - 仅用于传送纯净的id数组到父组件同后台通信
-      let harfKeys = this.$refs['to-tree'].getHalfCheckedKeys()
-      // 获取选中通过穿梭框的nodes 选中节点数据
-      let arrayCheckedNodes = this.$refs['to-tree'].getCheckedNodes(
-        this.leafOnly
-      )
-      // 获取选中通过穿梭框的nodes - 仅用于传送选中节点数组到父组件同后台通信需求
-      let nodes = JSON.parse(JSON.stringify(arrayCheckedNodes))
-      // 半选中节点数据
-      let arrayHalfCheckedNodes = this.$refs['to-tree'].getHalfCheckedNodes()
-      // 获取半选通过穿梭框的nodes - 仅用于传送选中节点数组到父组件同后台通信需求
-      let halfNodes = JSON.parse(JSON.stringify(arrayHalfCheckedNodes))
-      // 自定义参数读取设置
-      let children__ = this.defaultProps.children || 'children'
-      let pid__ = this.pid || 'pid'
-      let id__ = this['node_key'] || 'id'
-      /*
-       * 先整合目标树没有父节点的叶子节点选中，需要整理出来此叶子节点的父节点直到根节点路径 - 此时所有骨架节点已有
-       * 再将所有末端叶子节点根据pid直接推入目标树即可
-       * 声明新盒子将所有半选节点的子节点清除 - 只保留骨架 因为排序是先父后子 因此不存在子元素处理好插入时父元素还没处理的情况
-       * 下面一二步是为了搭建出来目标树没有根节点躯干节点时的叶子选中，给此叶子搭建出根节点和躯干节点
-       */
-      // let不存在状态提升 因此在函数调用之前赋值 并递归为以为数组！
-      let self_from_data = JSON.stringify(this.self_from_data)
-      // 第一步
-      let skeletonHalfCheckedNodes = JSON.parse(
-        JSON.stringify(arrayHalfCheckedNodes)
-      ) // 深拷贝数据 - 半选节点
-      // 筛选目标树不存在的骨架节点 - 半选内的节点
-      let newSkeletonHalfCheckedNodes = []
-      skeletonHalfCheckedNodes.forEach(item => {
-        if (!inquireIsExist(item)) {
-          newSkeletonHalfCheckedNodes.push(item)
-        }
-      })
-      // 筛选到目标树不存在的骨架后在处理每个骨架节点-非末端叶子节点 - 半选节点
-      newSkeletonHalfCheckedNodes.forEach(item => {
-        item[children__] = []
-        if (item[pid__] == 0) {
-          this.$refs['from-tree'].append(item)
-        } else {
-          this.$refs['from-tree'].append(item, item[pid__])
-        }
-      })
-      // 第二步
-      let cloneSkeletonCheckedNodes = JSON.parse(
-        JSON.stringify(arrayCheckedNodes)
-      ) // 深拷贝数据 -选中节点
-      // 筛选目标树不存在的骨架节点 - 全选内的节点
-      let newSkeletonCheckedNodes = []
-      cloneSkeletonCheckedNodes.forEach(item => {
-        if (!inquireIsExist(item)) {
-          newSkeletonCheckedNodes.push(item)
-        }
-      })
-      // 筛选到目标树不存在的骨架后在处理每个骨架节点-非末端叶子节点 - 全选节点
-      newSkeletonCheckedNodes.forEach(item => {
-        if (item[children__] && item[children__].length > 0) {
-          item[children__] = []
-          this.$refs['from-tree'].append(item, item[pid__])
-        }
-      })
-      // 第三步 处理末端叶子元素 - 声明新盒子筛选出所有末端叶子节点
-      let leafCheckedNodes = arrayCheckedNodes.filter(
-        item => !item[children__] || item[children__].length == 0
-      )
-      // 末端叶子直接插入目标树
-      leafCheckedNodes.forEach(item => {
-        this.$refs['from-tree'].append(item, item[pid__])
-      })
-      // 递归查询data内是否存在item函数
-      function inquireIsExist (item, strData = self_from_data) {
-        // 将树形数据格式化成一维字符串 然后通过匹配来判断是否已存在
-        let strItem =
-          typeof item[id__] === 'number'
-            ? `"${id__}":${item[id__]}`
-            : `"${id__}":"${item[id__]}"`
-        let reg = RegExp(strItem)
-        let existed = reg.test(strData)
-        /*  for (let i of data) {
-          if (item.id == i.id) {
-            existed = true;
-          } else if (i.children.length > 0) {
-            inquireIsExist(item, i.children);
-          }
-        } */
-        return existed
-      }
-      /*  // 选中项 从源数据移除
-      arrayCheckedNodes.forEach(item => {
-        recursive(item, this.self_from_data);
-      });
-      // 源树递归查询
-      function recursive(obj, data) {
-        for (let i of data) {
-          if (i.id == obj.id) {
-            console.log("f", data);
-            let arr = data.filter(b => b.id != obj.id);
-            data = arr;
-            console.log("t", data);
-            continue;
-          } else {
-            recursive(obj, i.children);
-          }
-        }
-      } */
-      // 右侧删掉选中数据
-      arrayCheckedNodes.forEach(item => {
-        this.$refs['to-tree'].remove(item)
-      })
-      // 处理完毕按钮恢复禁用状态
-      this.to_check_keys = []
-      // 目标数据节点展开
-      if (this.transferOpenNode) {
-        this.from_expanded_keys = keys
-      }
-      // 传递信息给父组件
-      this.$emit('removeBtn', this.self_from_data, this.self_to_data, {
-        keys,
-        nodes,
-        harfKeys,
-        halfNodes
-      })
-    },
+
     // 源树选中事件 - 是否禁用穿梭按钮
     fromTreeChecked (nodeObj, treeObj) {
       console.log(treeObj.checkedNodes)
@@ -717,6 +699,9 @@ export default {
         // this.from_check_keys =getTotal(array)
         this.from_check_keys = this.self_from_data
         this.$refs['from-tree'].setCheckedNodes(this.self_from_data)
+        this.$nextTick(()=>{
+          // this.from_check_keys=   this.$refs['from-tree'].getCheckedKeys().concat( this.$refs['from-tree'].getHalfCheckedKeys())
+        })
       } else {
         this.$refs['from-tree'].setCheckedNodes([])
         this.from_check_keys = []
@@ -828,19 +813,191 @@ export default {
       } else {
         this.move_up = false
       }
-    }
+    },
+    // 移除按钮
+    removeToSource () {
+      // 获取选中通过穿梭框的keys - 仅用于传送纯净的id数组到父组件同后台通信
+      let keys = this.$refs['to-tree'].getCheckedKeys(this.leafOnly)
+      // 获取半选通过穿梭框的keys - 仅用于传送纯净的id数组到父组件同后台通信
+      let harfKeys = this.$refs['to-tree'].getHalfCheckedKeys()
+      // 获取选中通过穿梭框的nodes 选中节点数据
+      let arrayCheckedNodes = this.$refs['to-tree'].getCheckedNodes(
+        this.leafOnly
+      )
+      // 获取选中通过穿梭框的nodes - 仅用于传送选中节点数组到父组件同后台通信需求
+      let nodes = JSON.parse(JSON.stringify(arrayCheckedNodes))
+      // 半选中节点数据
+      let arrayHalfCheckedNodes = this.$refs['to-tree'].getHalfCheckedNodes()
+      // 获取半选通过穿梭框的nodes - 仅用于传送选中节点数组到父组件同后台通信需求
+      let halfNodes = JSON.parse(JSON.stringify(arrayHalfCheckedNodes))
+      // 自定义参数读取设置
+      let children__ = this.defaultProps.children || 'children'
+      let pid__ = this.pid || 'pid'
+      let id__ = this['node_key'] || 'id'
+      /*
+       * 先整合目标树没有父节点的叶子节点选中，需要整理出来此叶子节点的父节点直到根节点路径 - 此时所有骨架节点已有
+       * 再将所有末端叶子节点根据pid直接推入目标树即可
+       * 声明新盒子将所有半选节点的子节点清除 - 只保留骨架 因为排序是先父后子 因此不存在子元素处理好插入时父元素还没处理的情况
+       * 下面一二步是为了搭建出来目标树没有根节点躯干节点时的叶子选中，给此叶子搭建出根节点和躯干节点
+       */
+      // let不存在状态提升 因此在函数调用之前赋值 并递归为以为数组！
+      let self_from_data = JSON.stringify(this.self_from_data)
+      // 第一步
+      let skeletonHalfCheckedNodes = JSON.parse(
+        JSON.stringify(arrayHalfCheckedNodes)
+      ) // 深拷贝数据 - 半选节点
+      // 筛选目标树不存在的骨架节点 - 半选内的节点
+      let newSkeletonHalfCheckedNodes = []
+      skeletonHalfCheckedNodes.forEach(item => {
+        if (!inquireIsExist(item)) {
+          newSkeletonHalfCheckedNodes.push(item)
+        }
+      })
+      // 筛选到目标树不存在的骨架后在处理每个骨架节点-非末端叶子节点 - 半选节点
+      newSkeletonHalfCheckedNodes.forEach(item => {
+        item[children__] = []
+        if (item[pid__] == 0) {
+          this.$refs['from-tree'].append(item)
+        } else {
+          this.$refs['from-tree'].append(item, item[pid__])
+        }
+      })
+      // 第二步
+      let cloneSkeletonCheckedNodes = JSON.parse(
+        JSON.stringify(arrayCheckedNodes)
+      ) // 深拷贝数据 -选中节点
+      // 筛选目标树不存在的骨架节点 - 全选内的节点
+      let newSkeletonCheckedNodes = []
+      cloneSkeletonCheckedNodes.forEach(item => {
+        if (!inquireIsExist(item)) {
+          newSkeletonCheckedNodes.push(item)
+        }
+      })
+      // 筛选到目标树不存在的骨架后在处理每个骨架节点-非末端叶子节点 - 全选节点
+      newSkeletonCheckedNodes.forEach(item => {
+        // if (item[children__] && item[children__].length > 0) {
+        //   item[children__] = []
+        //   this.$refs['from-tree'].append(item, item[pid__])
+        // }
+        if (item[children__] && item[children__].length > 0) {
+          item[children__] = []
+        }
+        this.$refs['from-tree'].append(item, item[pid__])
+      })
+      // 第三步 处理末端叶子元素 - 声明新盒子筛选出所有末端叶子节点
+      let leafCheckedNodes = arrayCheckedNodes.filter(
+        item => !item[children__] || item[children__].length == 0
+      )
+      // 末端叶子直接插入目标树
+      leafCheckedNodes.forEach(item => {
+        // this.$refs['from-tree'].append(item, item[pid__])
+      })
+      // 递归查询data内是否存在item函数
+      function inquireIsExist (item, strData = self_from_data) {
+        // 将树形数据格式化成一维字符串 然后通过匹配来判断是否已存在
+        let strItem =
+          typeof item[id__] === 'number'
+            ? `"${id__}":${item[id__]}`
+            : `"${id__}":"${item[id__]}"`
+        let reg = RegExp(strItem)
+        let existed = reg.test(strData)
+        /*  for (let i of data) {
+          if (item.id == i.id) {
+            existed = true;
+          } else if (i.children.length > 0) {
+            inquireIsExist(item, i.children);
+          }
+        } */
+        return existed
+      }
+      /*  // 选中项 从源数据移除
+      arrayCheckedNodes.forEach(item => {
+        recursive(item, this.self_from_data);
+      });
+      // 源树递归查询
+      function recursive(obj, data) {
+        for (let i of data) {
+          if (i.id == obj.id) {
+            console.log("f", data);
+            let arr = data.filter(b => b.id != obj.id);
+            data = arr;
+            console.log("t", data);
+            continue;
+          } else {
+            recursive(obj, i.children);
+          }
+        }
+      } */
+      // 右侧删掉选中数据
+      arrayCheckedNodes.forEach(item => {
+          // this.$refs['from-tree'].remove(item)
+        this.$refs['to-tree'].remove(item)
+      })
+      // 处理完毕按钮恢复禁用状态
+      this.to_check_keys = []
+      // 目标数据节点展开
+      if (this.transferOpenNode) {
+        this.from_expanded_keys = keys
+      }
+      // 传递信息给父组件
+      this.$emit('removeBtn', this.self_from_data, this.self_to_data, {
+        keys,
+        nodes,
+        harfKeys,
+        halfNodes
+      })
+    },
   },
   computed: {
     from_check_keys_length() {
       console.log(this.from_check_keys)
       console.log("this.from_check_keys")
       // return getTotal(this.from_check_keys);
+      let arrNodes=this.from_check_keys;
+      let leafCheckedNodes = arrNodes.filter(
+        item => !item.children || item.children.length == 0
+      )
+   // =   this.$refs['from-tree'].getCheckedKeys().concat( this.$refs['from-tree'].getHalfCheckedKeys())
+
+      let num=0;
       if(this.from_check_all){
         console.log("1111")
-        return this.leftTotalCount
+       return this.leftTotalCount
+      }else{
+        // 选中节点数据
+
+
+          let arrayCheckedNodes = this.$refs['from-tree']&&  this.$refs['from-tree'].getCheckedNodes(
+            this.leafOnly
+          )
+          // 获取选中通过穿梭框的nodes - 仅用于传送选中节点数组到父组件同后台通信需求
+          // let nodes = JSON.parse(JSON.stringify(arrayCheckedNodes))
+          // this.$refs['from-tree'].getCheckedKeys().concat( this.$refs['from-tree'].getHalfCheckedKeys())
+          num= getCheckTotal(arrayCheckedNodes )
+         return num;
+
       }
-      console.log("22222")
-      return Object.keys(this.from_check_keys).length;
+
+      // // let不存在状态提升 因此在函数调用之前赋值 并递归为以为数组！
+      // let self_from_data = JSON.stringify(this.self_from_data)
+      // // 第一步
+      // let skeletonHalfCheckedNodes =this.self_from_data
+      // let newSkeletonHalfCheckedNodes = []
+      // skeletonHalfCheckedNodes.forEach(item => {
+      //     newSkeletonHalfCheckedNodes.push(item)
+      // })
+      // console.log(newSkeletonHalfCheckedNodes)
+      // console.log(newSkeletonHalfCheckedNodes.length)
+      // console.log("newSkeletonHalfCheckedNodes.length")
+      //
+      //
+      // console.log("22222")
+      //
+      // console.log(arrNodes)
+      // console.log("arrNodes")
+
+      // return Object.keys(leafCheckedNodes).length;
+     // return Object.keys(this.from_check_keys).length;
     },
     // 左侧数据
     self_from_data () {
@@ -989,8 +1146,14 @@ export default {
 }
 </script>
 
-<style scoped>
+<style  scoped>
 @import "./clear.css";
+/*#transfer /deep/ .el-tree-node .is-leaf + .el-checkbox .el-checkbox__inner{*/
+ /*display: inline-block;*/
+/*}*/
+/*#transfer /deep/ .el-tree-node .el-checkbox .el-checkbox__inner{*/
+  /*display: none;*/
+/*}*/
 .el-tree {
   min-width: 100%;
   display: inline-block !important;

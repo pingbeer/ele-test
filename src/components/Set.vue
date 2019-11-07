@@ -1,12 +1,6 @@
 <template>
     <div>
-      <div>
-        1. 相互移动根据key排序问题<br>
-        2. 过滤全选择 过滤掉的也被选中 移走
-        3. 相互移动根据key排序问题<br>
-      </div>
-      <treeTransfer :title="title" :from_data='fromData' :to_data='toData' :defaultProps="{label:'label'}" @addBtn='add' @removeBtn='remove' :mode='mode' height='540px' filter openAll>
-    </treeTransfer>
+     set
     </div>
 </template>
 
