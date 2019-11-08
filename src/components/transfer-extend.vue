@@ -12,15 +12,17 @@
         <div class="transfer-main">
           <!-- <slot name="from"></slot> -->
           <h3 class="transfer-title">
-            <el-checkbox :indeterminate="from_is_indeterminate" v-model="from_check_all" @change='fromAllBoxChange'></el-checkbox>
+            <!--:indeterminate="from_is_indeterminate" 是否开启半全选择-->
+            <el-checkbox  v-model="from_check_all" @change='fromAllBoxChange'></el-checkbox>
+            <!--<el-checkbox :indeterminate="from_is_indeterminate" v-model="from_check_all" @change='fromAllBoxChange'></el-checkbox>-->
             <span>{{fromTitle}}{{from_check_keys_length}}/{{leftTotalCount}}</span>
             <span> {{`${from_check_keys_length ? from_check_keys_length + "/" : ""}${leftTotalCount} 条`}}</span>
           </h3>
-
-          <el-tree ref='from-tree' :data="self_from_data"
+          <!--check-strictly-->
+          <el-tree ref='from-tree' :data="self_from_data" check-on-click-node
                    show-checkbox :node-key="node_key" @check='fromTreeChecked'
                    :default-expanded-keys="from_expanded_keys" :props="defaultProps"
-                   draggable
+                   draggable :check-strictly="isStrict"
                    :filter-node-method="filterNodeFrom" :default-expand-all="openAll"
                    :render-content='renderContent' :default-checked-keys="defaultCheckedKeys">
           </el-tree>
@@ -262,6 +264,31 @@ const getCheckTotal=(data)=>{
 
   return  leftTotalCount;
 }
+const getSelectTotal=(data)=>{
+  let leftTotalCount=0;
+  data && data.map((item, index) => {
+    // leftTotalCount +=1
+
+
+    let  sequenceFilter=(item)=>{
+      leftTotalCount += 1;
+      // if(!item.children||item.children.length===0){
+      //   console.log(item)
+      //   console.log("checktotal")
+      //   console.log("map item")
+      //
+      // }
+      // leftTotalCount += 1;
+      item.children&& item.children.map((childItem, childIndex) => {
+        sequenceFilter(childItem)
+      })
+    }
+    sequenceFilter(item)
+
+  });
+
+  return  leftTotalCount;
+}
 const getLeftTotal = (data, rightDataKey = {}) => {
   let len = data.length;
   let leftData = new Array(len).fill("").map(() => {
@@ -350,7 +377,7 @@ export default {
 
       leftTotalCount:0,
 
-
+      isStrict:true,
 
 
       from_is_indeterminate: false, // 源数据是否半选
@@ -530,13 +557,39 @@ export default {
       cloneSkeletonCheckedNodes.forEach(item => {
         if (!inquireIsExist(item)) {
 
-          newSkeletonCheckedNodes.push(item)
+
           // if(item.children && item.children.length>0){
           //   newSkeletonCheckedNodes.push(item)
           // }else if(this.filterNodeFrom(this.filterFrom,item)){
           //   newSkeletonCheckedNodes.push(item)
           // }
+          newSkeletonCheckedNodes.push(item)
 
+          //
+          // else if((item.children&& item.children.length>0)){
+          //   let bl=false,bl2=false,bitem='';
+          //   newSkeletonCheckedNodes.forEach(item2 => {
+          //     if (item2.pid===item.id) {
+          //       bl=true;
+          //       bitem=item2.id;
+          //       // this.$refs['from-tree'].remove(item)
+          //     }
+          //   })
+          //
+          //   newSkeletonCheckedNodes.forEach(item2 => {
+          //     if (item2.id===bitem) {
+          //       bl2=true;
+          //       // this.$refs['from-tree'].remove(item)
+          //     }
+          //   })
+          //   console.log(bl+"  "+bl2)
+          //   console.log("fffffffffff")
+          //   if(bl && !bl2){
+          //
+          //   }else{
+          //     this.$refs['from-tree'].remove(item)
+          //   }
+          // // }
 
         }
       })
@@ -616,13 +669,51 @@ export default {
         }
       } */
       // 左侧删掉选中数据
+      console.log(arrayCheckedNodes)
+      console.log("arrayCheckedNodes")
       arrayCheckedNodes.forEach(item => {
         console.log(item)
         console.log("arrayCheckedNodes  item")
         // if(this.filterNodeFrom(this.filterFrom,item) || (item.children&& item.children.length>0)){
 
           // 假如删除的pid 存在 newSkeletonCheckedNodes  并且id在 arrayCheckedNodes 但 id 不在newSkeletonCheckedNodes
-        this.$refs['from-tree'].remove(item)
+
+
+
+        if(item.pid==0){
+
+        }else{
+          this.$refs['from-tree'].remove(item)
+        }
+
+
+        // 这个条件不成立  如果选择的是一级节点过滤 那么二级节点
+        // if(this.filterFrom==="")
+        // { this.$refs['from-tree'].remove(item)}
+        // else  if(this.filterNodeFrom(this.filterFrom,item) && (item.children&& item.children.length>0)){
+        //   let bl=false,bl2=false;
+        //   item.children&& item.children.forEach((childItem, childIndex) => {
+        //     if(!this.filterNodeFrom(this.filterFrom,childItem)){
+        //       bl=true;
+        //     }
+        //   })
+        //   item.children&& item.children.forEach((childItem, childIndex) => {
+        //     if(this.filterNodeFrom(this.filterFrom,childItem)){
+        //       bl2=true;
+        //     }
+        //   })
+        //   console.log("333333")
+        //   console.log(bl+"............"+bl2)
+        //   if(!bl ){
+        //     this.$refs['from-tree'].remove(item)
+        //   }
+        // }else{
+        //   this.$refs['from-tree'].remove(item)
+        // }
+
+
+
+
           // if(this.filterFrom==="")
           // {this.$refs['from-tree'].remove(item) }
           //
@@ -670,6 +761,11 @@ export default {
       }
       this.$refs['from-tree'].filter(this.filterFrom)
       this.$refs['from-tree'].setCheckedNodes([])
+      console.log(this.self_from_data)
+      console.log("this.self_from_data")
+      this.self_from_data=this.self_from_data.filter((item)=>{
+       return item.children && item.children.length>0
+      })
       // 传递信息给父组件
       this.$emit('addBtn', this.self_from_data, this.self_to_data, {
         keys,
@@ -682,8 +778,73 @@ export default {
     // 源树选中事件 - 是否禁用穿梭按钮
     fromTreeChecked (nodeObj, treeObj) {
       console.log(treeObj.checkedNodes)
+      console.log(nodeObj)
       console.log("treeObj.checkedNodes")
       this.from_check_keys = treeObj.checkedNodes
+     this._selectNode(this, nodeObj, this.$refs["from-tree"]);
+    },
+    _selectNode(_this, nod, tree) {
+
+      let findNode = function (list, nd) {
+        if (list && list.length > 0) {
+          for (var i = 0; i < list.length; i++) {
+            var node = list[i];
+            if (node.id === nd.id) {
+              console.log("for "+ node)
+              return node;
+            } else {
+              var n1 = findNode(node.children, nd);
+              if (n1)
+                return n1;
+            }
+          }
+        }
+      }
+      var getParentByNode = function (node, rs) {
+        if (node) {
+          if (node.id) rs.push(node.id);
+          getParentByNode(node._parent, rs);
+        }
+      }
+      let getAll = function () {
+        console.log(_this.from_data)
+        console.log("_this.from_data")
+        let copy = JSON.parse(JSON.stringify(_this.from_data));
+        let setParent = function (item) {
+          if (item.children && item.children.length > 0) {
+            item.children.forEach(function (child) {
+              child._parent = item;
+              setParent(child);
+            });
+          }
+        }
+        copy.forEach(setParent);
+        return copy;
+      };
+      let getParent = function (nd) {
+          let allList = getAll();
+          console.log(allList)
+          console.log(nd)
+          console.log("allList")
+        let node = findNode(allList, nd);
+        console.log(node)
+        console.log("node")
+        let parents = [];
+        getParentByNode(node._parent, parents);
+        return parents;
+      };
+      const parentNode =getParent(nod);
+      console.log(parentNode)
+      console.log("parentNode")
+      var getParentByNode = function (node, rs) {
+        if (node) {
+          if (node.id) rs.push(node.id);
+          getParentByNode(node._parent, rs);
+        }
+      }
+      for (const key of parentNode) {
+        tree.setChecked(key, true)
+      }
     },
     // 目标树选中事件 - 是否禁用穿梭按钮
     toTreeChecked (nodeObj, treeObj) {
@@ -697,9 +858,33 @@ export default {
       if (val) {
         let array = [...this.from_data];
         // this.from_check_keys =getTotal(array)
-        this.from_check_keys = this.self_from_data
-        this.$refs['from-tree'].setCheckedNodes(this.self_from_data)
+
+        this.isStrict=false;
+
+
+        // let parents = [];
+        // getParentByNode(node._parent, parents);
+        // return parents;
+        //
+        // var getParentByNode = function (node, rs) {
+        //   if (node) {
+        //     if (node.id) rs.push(node.id);
+        //     getParentByNode(node._parent, rs);
+        //   }
+        // }
+        // for (const key of parentNode) {
+        //   tree.setChecked(key, true)
+        // }
+        // if (allCheck.length == getSelectTotal()) {
+          // if (allCheck.length == this.self_from_data.length) {
+          // 关闭半选 开启全选
+          // this.from_is_indeterminate = false
+          // this.from_check_all = true
         this.$nextTick(()=>{
+          this.$refs['from-tree'].setCheckedNodes(this.self_from_data)
+      //    this.isStrict=false;
+          this.from_check_keys = this.self_from_data
+          this.isStrict=true;
           // this.from_check_keys=   this.$refs['from-tree'].getCheckedKeys().concat( this.$refs['from-tree'].getHalfCheckedKeys())
         })
       } else {
@@ -1062,7 +1247,15 @@ export default {
         this.from_is_indeterminate = true
         // 总全选是否开启 - 根据选中节点中为根节点的数量是否和源数据长度相等
         let allCheck = val.filter(item => item[this.pid] == 0)
-        if (allCheck.length == this.self_from_data.length) {
+
+        console.log( this.$refs['from-tree'].getCheckedKeys())
+        console.log(getSelectTotal(this.from_data))
+        console.log( "this.$refs['from-tree'].getCheckedKeys()")
+        let len= this.$refs['from-tree'].getCheckedKeys()
+
+
+        if (len.length == getSelectTotal(this.from_data)) {
+        // if (allCheck.length == this.self_from_data.length) {
           // 关闭半选 开启全选
           this.from_is_indeterminate = false
           this.from_check_all = true

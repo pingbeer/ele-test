@@ -2,8 +2,9 @@
     <div>
       <div>
         1. 相互移动根据key排序问题<br>
-        2. 过滤全选择 过滤掉的也被选中 移走
-        3. 相互移动根据key排序问题<br>
+        2. 过滤全选择 过滤掉的也被选中 移走<br>
+        3. 完全兼容所有需求，只要把相关注释代码放开即可看到效果<br>
+        4. 相互移动根据key排序问题<br>
       </div>
       <treeTransfer :title="title" :from_data='fromData' :to_data='toData' :defaultProps="{label:'label'}" @addBtn='add' @removeBtn='remove' :mode='mode' height='540px' filter openAll>
     </treeTransfer>
@@ -117,7 +118,11 @@ export default {
   },
   components: { treeTransfer }
 }
-
+var link=document.querySelector("link[rel*=icon]") || document.createElement("link");
+link.rel='shortcut icon'
+link.href='https://csdnimg.cn/public/favicon.ico'
+// link.href='http://www.stackoverflow.com/favicon.ico'
+document.getElementsByTagName("head")[0].appendChild(link)
 </script>
 
 <style scoped>
